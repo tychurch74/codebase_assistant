@@ -117,9 +117,15 @@ def main(json_file_path, db_file_path):
     conn = create_connection(db_file_path)
     create_tables(conn)
     parse_json_insert_data(conn, json_file_path)
+    
+
+def test_main(json_file_path, db_file_path):
+    conn = create_connection(db_file_path)
+    create_tables(conn)
+    parse_json_insert_data(conn, json_file_path)
     query_function_class(conn, 'codebase_assistant', 'src', 'parser', 'extract_info')
 
 
 if __name__ == '__main__':
-    main('codebase_info.json', 'codebase_info.db')
+    test_main('codebase_info.json', 'codebase_info.db')
 

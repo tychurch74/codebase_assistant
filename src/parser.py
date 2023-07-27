@@ -4,6 +4,7 @@ import astunparse
 import json
 import os
 from gpt_funcs import code_to_nl
+from db_gen import main as create_db
 
 # Define a function to extract docstrings and AST dumps for functions and classes.
 def extract_info(node):
@@ -44,11 +45,19 @@ def parse_directory(directory_path):
 
 if __name__ == '__main__':
     # Parse the directory and write the result to a .json file.
+    if not os.path.exists('gpt_workspace'):
+        os.mkdir('gpt_workspace')
+
     project_folder_name = "codebase_assistant"
     directory_location = "src"
     modules = parse_directory(directory_location)
 
     data = {project_folder_name: {directory_location: modules}}
 
-    with open(f'{project_folder_name}-{directory_location}_info.json', 'w') as file:
+    with open(f'gpt_workspace/{project_folder_name}-{directory_location}_info.json', 'w') as file:
         json.dump(data, file, indent=2)
+
+    # Create a database from the .json file.
+    create_db(f'gpt_workspace/{project_folder_name}-{directory_location}_info.json', f'gpt_workspace/{project_folder_name}-{directory_location}_info.db')
+
+    
