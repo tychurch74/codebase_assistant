@@ -1,0 +1,38 @@
+{
+  "project_name": {
+    "folder name1": {
+      "file1_name": {
+        "docstring": "any docstring outside functions or classes",
+        "functions_and_classes": {
+          "function or class name1": {
+            "nl_description": "Description of function or class in natural language.",
+            "docstring": "any docstring within function or class",
+            "ast_output": "abstract syntax tree representation of function or class",
+            "source_code": "source code of function or class formatted as a string"
+          }
+        }
+      },
+      "file2_name": {
+        "docstring": "any docstring outside functions or classes",
+        "functions_and_classes": {
+          "function or class name1": {
+            "nl_description": "Description of function or class in natural language.",
+            "docstring": "any docstring within function or class",
+            "ast_output": "abstract syntax tree representation of function or class",
+            "source_code": "source code of function or class formatted as a string"
+          },
+          "function or class name2": {
+            "nl_description": "Description of function or class in natural language.",
+            "docstring": "any docstring within function or class",
+            "ast_output": "abstract syntax tree representation of function or class",
+            "source_code": "source code of function or class formatted as a string"
+          }
+        }
+      },
+      "__init__": {
+        "docstring": null,
+        "functions_and_classes": {}
+      }
+    }
+  }
+}
