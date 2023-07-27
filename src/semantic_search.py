@@ -58,7 +58,23 @@ def get_past_conversations(db_file_path, db_name):
     cur = conn.cursor()
 
     # Get all past conversations
-    cur.execute(f"SELECT * FROM functions_classes")
+    cur.execute('''
+        SELECT 
+            f_c.name, 
+            f_c.nl_description, 
+            f_c.docstring, 
+            f_c.ast_output, 
+            f_c.source_code 
+        FROM functions_classes f_c
+        JOIN files f ON f_c.file_id = f.id
+        JOIN folders fo ON f.folder_id = fo.id
+        JOIN projects p ON fo.project_id = p.id
+        WHERE 
+            f_c.name = ? AND
+            f.name = ? AND
+            fo.name = ? AND
+            p.name = ?
+    ''', ("parse_directory", "parser", "src", "codebase_assistant"))
     past_conversations = cur.fetchall()
 
     # Close the connection
