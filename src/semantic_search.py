@@ -58,7 +58,7 @@ def get_past_conversations(db_file_path, db_name):
     cur = conn.cursor()
 
     # Get all past conversations
-    cur.execute(f"SELECT * FROM {db_name}")
+    cur.execute(f"SELECT * FROM functions_classes")
     past_conversations = cur.fetchall()
 
     # Close the connection
@@ -86,3 +86,19 @@ def semantic_search(past_conversations, user_input):
     most_similar_sentences = [past_sentences[i] for i in most_similar_indices]
 
     return most_similar_sentences
+
+
+if __name__ == "__main__":
+    # Get past conversations
+    past_conversations = get_past_conversations("gpt_workspace/codebase_assistant-src_info.db", "codebase_assistant-src_info")
+
+    # Get user input
+    user_input = input("User: ")
+
+    # Get the most similar past conversations
+    most_similar_sentences = semantic_search(past_conversations, user_input)
+
+    # Print the most similar sentences
+    print("Chatbot: Here are some similar sentences from our past conversations:")
+    for sentence in most_similar_sentences:
+        print(sentence)
