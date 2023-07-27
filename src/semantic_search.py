@@ -52,7 +52,7 @@ def save_conversation_history(user_input, chatbot_response):
     conn.close()
 
 
-def get_past_conversations(db_file_path, db_name):
+def get_past_conversations(db_file_path):
     # Connect to the SQLite database
     conn = sqlite3.connect(db_file_path)
     cur = conn.cursor()
@@ -60,22 +60,12 @@ def get_past_conversations(db_file_path, db_name):
     # Get all past conversations
     cur.execute('''
         SELECT 
-            f_c.name, 
-            f_c.nl_description, 
-            f_c.docstring, 
-            f_c.ast_output, 
-            f_c.source_code 
-        FROM functions_classes f_c
-        JOIN files f ON f_c.file_id = f.id
-        JOIN folders fo ON f.folder_id = fo.id
-        JOIN projects p ON fo.project_id = p.id
-        WHERE 
-            f_c.name = ? AND
-            f.name = ? AND
-            fo.name = ? AND
-            p.name = ?
-    ''', ("parse_directory", "parser", "src", "codebase_assistant"))
+            name, 
+            nl_description
+        FROM functions_classes
+    ''')
     past_conversations = cur.fetchall()
+    
 
     # Close the connection
     conn.close()
@@ -86,7 +76,7 @@ def get_past_conversations(db_file_path, db_name):
 
 def semantic_search(past_conversations, user_input):
     # Extract the sentences from the past conversations
-    past_sentences = [conv[0] for conv in past_conversations]
+    past_sentences = [conv[1] for conv in past_conversations]
 
     # Convert conversations and user input to vectors
     past_vectors = embed_sentences(past_sentences)
@@ -96,25 +86,31 @@ def semantic_search(past_conversations, user_input):
     similarities = calculate_similarities(past_vectors, user_vector)
 
     # Get the 5 most similar past conversations
-    most_similar_indices = get_most_similar(similarities, 5)
+    most_similar_indices = get_most_similar(similarities, 1)
 
     # Get the most similar sentences
     most_similar_sentences = [past_sentences[i] for i in most_similar_indices]
 
-    return most_similar_sentences
+    return most_similar_sentences, most_similar_indices
+
+
+def main(db_path, user_input):
+    # Get past conversations
+    past_conversations = get_past_conversations(db_path)
+
+    # Get the most similar past conversations
+    most_similar_sentences, most_similar_indicies = semantic_search(past_conversations, user_input)
+
+    most_similar_indicie = most_similar_indicies[0]
+    
+    relevant_func = past_conversations[most_similar_indicie]
+    relevant_func = ": ".join(relevant_func)
+    return relevant_func
 
 
 if __name__ == "__main__":
-    # Get past conversations
-    past_conversations = get_past_conversations("gpt_workspace/codebase_assistant-src_info.db", "codebase_assistant-src_info")
 
-    # Get user input
-    user_input = input("User: ")
+    user_input = input("Query: ")
+    print(main("gpt_workspace/codebase_assistant-src_info.db", user_input))
 
-    # Get the most similar past conversations
-    most_similar_sentences = semantic_search(past_conversations, user_input)
-
-    # Print the most similar sentences
-    print("Chatbot: Here are some similar sentences from our past conversations:")
-    for sentence in most_similar_sentences:
-        print(sentence)
+    
