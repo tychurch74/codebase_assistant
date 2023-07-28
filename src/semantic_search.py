@@ -101,7 +101,7 @@ def semantic_search(past_conversations, user_input):
     similarities = calculate_similarities(past_vectors, user_vector)
 
     # Get the 5 most similar past conversations
-    most_similar_indices = get_most_similar(similarities, 2)
+    most_similar_indices = get_most_similar(similarities, 5)
 
     # Get the most similar sentences
     most_similar_sentences = [past_sentences[i] for i in most_similar_indices]
@@ -130,7 +130,7 @@ def query_codebase(db_path, user_input):
         relevant_func = past_conversations[most_similar_indicie]
         relevant_func = ": ".join(relevant_func)
         num_tokens += count_tokens(relevant_func)
-        if num_tokens < 2048:
+        if num_tokens < 2500:
             relevant_context.append(relevant_func)
         else:
             break

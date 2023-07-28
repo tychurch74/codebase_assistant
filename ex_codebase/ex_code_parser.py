@@ -2,66 +2,95 @@ import os
 import ast
 import json
 import astunparse
-from concurrent.futures import ThreadPoolExecutor
 from gpt_funcs import code_to_nl
 from db_gen import db_gen as create_db
-import asyncio
 
-executor = ThreadPoolExecutor()
 
-async def extract_info(node):
+def extract_info(node):
+    """
+    Extract docstrings and AST dumps for functions and classes.
+
+    Args:
+        node (ast.AST): An AST node.
+
+    Returns:
+        dict: A dictionary containing natural language description, docstring, AST output, and source code
+              if the node is an instance of ast.FunctionDef or ast.ClassDef; None otherwise.
+    """
     if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
         docstring = ast.get_docstring(node)
         ast_output = ast.dump(node)
         source_code = astunparse.unparse(node)
-
-        loop = asyncio.get_event_loop()
-        nl_description = await loop.run_in_executor(executor, code_to_nl, source_code)
+        nl_description = code_to_nl(source_code)
 
         return {
-            "name": node.name,
             "nl_description": nl_description,
             "docstring": docstring,
             "ast_output": ast_output,
             "source_code": source_code,
         }
 
-async def parse_file(file_path):
+
+def parse_file(file_path):
+    """
+    Parse a Python file.
+
+    Args:
+        file_path (str): The path to the Python file.
+
+    Returns:
+        dict: A dictionary containing the module docstring and a dictionary of the functions and classes.
+    """
     with open(file_path, "r") as file:
         source_code = file.read()
 
     module = ast.parse(source_code)
     module_docstring = ast.get_docstring(module)
 
-    tasks = [
-        extract_info(node) for node in module.body
-        if isinstance(node, (ast.FunctionDef, ast.ClassDef))
-    ]
-
-    results = await asyncio.gather(*tasks)
-
     functions_and_classes = {
-        result["name"]: result for result in results
+        node.name: extract_info(node)
+        for node in module.body
+        if extract_info(node) is not None
     }
 
     return {
-        "full_path": file_path,
         "docstring": module_docstring,
         "functions_and_classes": functions_and_classes,
     }
 
-async def parse_directory(directory_path):
-    tasks = [
-        parse_file(os.path.join(directory_path, filename))
+
+def parse_directory(directory_path):
+    """
+    Parse a directory.
+
+    Args:
+        directory_path (str): The path to the directory.
+
+    Returns:
+        dict: A dictionary of the modules parsed from the directory.
+    """
+    modules = {
+        os.path.splitext(filename)[0]: parse_file(
+            os.path.join(directory_path, filename)
+        )
         for filename in os.listdir(directory_path)
         if filename.endswith(".py")
-    ]
+    }
 
-    results = await asyncio.gather(*tasks)
+    return modules
 
-    return {os.path.splitext(filename)[0]: result for filename, result in zip(os.listdir(directory_path), results)}
 
-async def parse_codebase():
+def parse_codebase():
+    """
+    Parse a codebase.
+
+    This function checks if a workspace exists, prompts the user for the project folder name and
+    directory location, creates a JSON file with this information, and creates a SQLite database from
+    the JSON file.
+
+    Returns:
+        str: The path to the database file.
+    """
     workspace = "gpt_workspace"
     if not os.path.exists(workspace):
         os.mkdir(workspace)
@@ -72,7 +101,7 @@ async def parse_codebase():
     db_filename = f"{workspace}/{project_folder_name}-{directory_location}_info.db"
 
     if not os.path.exists(json_filename):
-        modules = await parse_directory(directory_location)
+        modules = parse_directory(directory_location)
         data = {project_folder_name: {directory_location: modules}}
         with open(json_filename, "w") as file:
             json.dump(data, file, indent=2)
@@ -83,12 +112,5 @@ async def parse_codebase():
     return db_filename
 
 
-def parser_main():
-    db_filename = asyncio.run(parse_codebase())
-    executor.shutdown()
-    return db_filename
-
-
 if __name__ == "__main__":
-    parser_main()
-
+    parse_codebase()
