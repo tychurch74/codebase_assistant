@@ -1,6 +1,8 @@
 # Codebase_Assistant
 Collection of Python scripts that parses entire codebases, creates highly detailed descriptions of every class or function along with a high level overview of the structure and purpose of the codebase, and uses that information to provide specific, tailored assistance via GPT without the need for copy and pasting the code in question, simply just state the name of the function, class or script you want assistance with.
 
+Note: This project is still in the early stages of development; simply a fun side project I created in an afternoon and I'm working on in my spare time. Feel free to reach out to me if you wish to contribute or have any suggestions or questions.
+
 ## Example output
 ```
 Project folder name: codebase_assistant
