@@ -61,7 +61,8 @@ def get_past_conversations(db_file_path):
     cur.execute('''
         SELECT 
             name, 
-            nl_description
+            nl_description,
+            source_code
         FROM functions_classes
     ''')
     past_conversations = cur.fetchall()
@@ -94,7 +95,7 @@ def semantic_search(past_conversations, user_input):
     return most_similar_sentences, most_similar_indices
 
 
-def main(db_path, user_input):
+def query_codebase(db_path, user_input):
     # Get past conversations
     past_conversations = get_past_conversations(db_path)
 
@@ -111,6 +112,6 @@ def main(db_path, user_input):
 if __name__ == "__main__":
 
     user_input = input("Query: ")
-    print(main("gpt_workspace/codebase_assistant-src_info.db", user_input))
+    print(query_codebase("gpt_workspace/codebase_assistant-src_info.db", user_input))
 
     
