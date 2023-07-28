@@ -97,16 +97,17 @@ def parse_codebase():
 
     project_folder_name = input("Project folder name: ")
     directory_location = input("Directory location: ")
-    modules = parse_directory(directory_location)
-
-    data = {project_folder_name: {directory_location: modules}}
     json_filename = f"{workspace}/{project_folder_name}-{directory_location}_info.json"
-
-    with open(json_filename, "w") as file:
-        json.dump(data, file, indent=2)
-
     db_filename = f"{workspace}/{project_folder_name}-{directory_location}_info.db"
-    create_db(json_filename, db_filename)
+
+    if not os.path.exists(json_filename):
+        modules = parse_directory(directory_location)
+        data = {project_folder_name: {directory_location: modules}}
+        with open(json_filename, "w") as file:
+            json.dump(data, file, indent=2)
+
+    if not os.path.exists(db_filename):
+        create_db(json_filename, db_filename)
 
     return db_filename
 

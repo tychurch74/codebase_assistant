@@ -1,5 +1,6 @@
 import sqlite3
 import openai
+import tiktoken
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
@@ -10,11 +11,24 @@ def calculate_similarities(past_vectors, user_vector):
 
 
 def get_most_similar(similarities, k):
+    # Calculate the mean and standard deviation of the similarities
+    mean_sim = np.mean(similarities)
+    std_sim = np.std(similarities)
+
+    # Set the threshold at one standard deviation above the mean
+    threshold = mean_sim + std_sim
+
+    # Find the indices of the texts that meet this threshold
+    relevant_indices = [i for i, sim in enumerate(similarities) if sim >= threshold]
+
+    # Sort the relevant indices by the corresponding similarity, in descending order
+    relevant_indices = sorted(relevant_indices, key=lambda i: similarities[i], reverse=True)
+
     # Get the indices of the k most similar past sentences
-    most_similar_indices = np.argsort(similarities)[-k:]
+    most_similar_indices = relevant_indices[:k]
 
     # Return the most similar sentences in ascending order of similarity
-    return most_similar_indices[::-1]
+    return most_similar_indices
 
 
 def embed_sentences(sentences):
@@ -87,12 +101,19 @@ def semantic_search(past_conversations, user_input):
     similarities = calculate_similarities(past_vectors, user_vector)
 
     # Get the 5 most similar past conversations
-    most_similar_indices = get_most_similar(similarities, 1)
+    most_similar_indices = get_most_similar(similarities, 2)
 
     # Get the most similar sentences
     most_similar_sentences = [past_sentences[i] for i in most_similar_indices]
 
     return most_similar_sentences, most_similar_indices
+
+
+def count_tokens(text):
+    """Returns the number of tokens in a text string."""
+    encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
+    num_tokens = len(encoding.encode(text))
+    return num_tokens
 
 
 def query_codebase(db_path, user_input):
@@ -101,12 +122,21 @@ def query_codebase(db_path, user_input):
 
     # Get the most similar past conversations
     most_similar_sentences, most_similar_indicies = semantic_search(past_conversations, user_input)
+    num_tokens = count_tokens(user_input)
 
-    most_similar_indicie = most_similar_indicies[0]
-    
-    relevant_func = past_conversations[most_similar_indicie]
-    relevant_func = ": ".join(relevant_func)
-    return relevant_func
+    relevant_context = []
+    for i, index in enumerate(most_similar_indicies):
+        most_similar_indicie = most_similar_indicies[i]
+        relevant_func = past_conversations[most_similar_indicie]
+        relevant_func = ": ".join(relevant_func)
+        num_tokens += count_tokens(relevant_func)
+        if num_tokens < 2048:
+            relevant_context.append(relevant_func)
+        else:
+            break
+
+    relevant_context = "\n".join(relevant_context)
+    return relevant_context
 
 
 if __name__ == "__main__":
