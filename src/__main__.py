@@ -1,6 +1,6 @@
 from code_parser import parser_main
 from semantic_search import query_codebase
-from gpt_funcs import code_to_nl, code_helper
+from gpt_funcs import code_helper
 
 
 def main():

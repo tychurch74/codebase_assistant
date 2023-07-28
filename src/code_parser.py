@@ -66,8 +66,8 @@ async def parse_codebase():
     if not os.path.exists(workspace):
         os.mkdir(workspace)
 
-    project_folder_name = input("Project folder name: ")
-    directory_location = input("Directory location: ")
+    project_folder_name = input("Codebase Name: ")
+    directory_location = input("Full Directory Location: ")
     json_filename = f"{workspace}/{project_folder_name}-{directory_location}_info.json"
     db_filename = f"{workspace}/{project_folder_name}-{directory_location}_info.db"
 
