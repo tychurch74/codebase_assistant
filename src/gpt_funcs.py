@@ -16,6 +16,22 @@ def code_to_nl(
     return response["choices"][0]["message"]["content"]
 
 
+def relevant_context(
+    input_content, context, model_temperature=0.1, model="gpt-3.5-turbo-16k"
+):
+    system_message = {"role": "system", "content": "You are an AI trained by openai to read through a user's query regarding a codebase as well as various pieces of contextual information retrieved from said codebase and return only the pieces of context that could aid in responding to the user's query. This context will include the names of specific functions or classes, a natural language explanation of said functions or classes and the actual source code of said functions or classes. Do not attempt to actually answer the user's query with the context provided, that is the job of the code_helper AI, your response should only include the pieces of context you deem most beneficial to the code_helper AI. Keep your responses as short and concise as possible and include the related full source code for the code_helper AI to see."}
+    
+    user_message = {"role": "user", "content": f"user query: {input_content}. Which pieces of the following context would be most beneficial to the code_helper AI when answering the user's query?: {context}" }
+
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=[system_message, user_message],
+        temperature=model_temperature,
+    )
+
+    return response["choices"][0]["message"]["content"]
+
+
 def code_helper(
     input_content, context, model_temperature=0.2, model="gpt-4-0314"
 ):

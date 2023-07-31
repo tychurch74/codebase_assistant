@@ -1,8 +1,9 @@
 import sqlite3
 import openai
 import tiktoken
-from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+from gpt_funcs import relevant_context as rc
 
 
 def calculate_similarities(past_vectors, user_vector):
@@ -101,7 +102,7 @@ def semantic_search(past_conversations, user_input):
     similarities = calculate_similarities(past_vectors, user_vector)
 
     # Get the 5 most similar past conversations
-    most_similar_indices = get_most_similar(similarities, 5)
+    most_similar_indices = get_most_similar(similarities, 7)
 
     # Get the most similar sentences
     most_similar_sentences = [past_sentences[i] for i in most_similar_indices]
@@ -130,18 +131,20 @@ def query_codebase(db_path, user_input):
         relevant_func = past_conversations[most_similar_indicie]
         relevant_func = ": ".join(relevant_func)
         num_tokens += count_tokens(relevant_func)
-        if num_tokens < 2500:
+        if num_tokens < 14000:
             relevant_context.append(relevant_func)
         else:
             break
 
     relevant_context = "\n".join(relevant_context)
+    relevant_context = rc(user_input, relevant_context)
+
     return relevant_context
 
 
 if __name__ == "__main__":
 
     user_input = input("Query: ")
-    print(query_codebase("gpt_workspace/codebase_assistant-src_info.db", user_input))
+    print(query_codebase("ex_gpt_workspace/codebase_assistant-ex_codebase_info.db", user_input))
 
     
